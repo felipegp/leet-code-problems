@@ -29,20 +29,17 @@ public class TurnstileProblem {
         Map<Integer, Integer> result = new HashMap<>();
         Map<Integer, List<Integer>> timeMap;
         int currentTime = 0;
+        timeMap = generateTimeMap(times);
 
         while (result.size() != times.length) {
-            timeMap = generateTimeMap(times);
-
             var idsAtTime = timeMap.get(currentTime);
 
-            if (idsAtTime != null) {
+            if (idsAtTime != null && !idsAtTime.isEmpty()) {
                 var preferableDir = getPreferableDir(result, currentTime, directions);
                 var preferablePerson = getPreferablePerson(preferableDir, idsAtTime, directions);
 
                 result.put(currentTime, preferablePerson);
-                times[preferablePerson] = currentTime;
-
-                addPlusOneForRemainingIdx(idsAtTime, currentTime, times, preferablePerson);
+                addPlusOneForRemainingIdx(timeMap, currentTime, preferablePerson);
             }
 
             currentTime++;
@@ -51,20 +48,26 @@ public class TurnstileProblem {
         return resultMapToArray(result);
     }
 
-    private static void addPlusOneForRemainingIdx(List<Integer> idxAtTime, int currentTime, int[] times, int preferableIdx) {
-        for (int i : idxAtTime) {
-            if (i != preferableIdx) {
-                times[i] = currentTime + 1;
+    private static void addPlusOneForRemainingIdx(Map<Integer, List<Integer>> timeMap, int currentTime, int preferableIdx) {
+        var idxAtTime = timeMap.get(currentTime);
+
+        var idxAtTimePlusOne = timeMap.getOrDefault(currentTime + 1, new ArrayList<>());
+
+        for (int j = idxAtTime.size() - 1; j >= 0; j--) {
+            int idx = idxAtTime.get(j);
+
+            if (idx != preferableIdx) {
+                idxAtTimePlusOne.addFirst(idx);
             }
         }
+
+        timeMap.put(currentTime + 1, idxAtTimePlusOne);
     }
 
     private static int[] resultMapToArray(Map<Integer, Integer> result) {
         int[] resultArray = new int[result.size()];
 
-        result.forEach((time, idx) -> {
-            resultArray[idx] = time;
-        });
+        result.forEach((time, idx) -> resultArray[idx] = time);
 
         return resultArray;
     }
